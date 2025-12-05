@@ -1,0 +1,13 @@
+
+/.quarto/
+*.Rproj.user
+*.Rhistory
+*.RData
+*.Ruserdata
+*.tex
+*.log
+*.aux
+*.out
+*.knit.md
+*.utf8.md
+*.synctex.gz

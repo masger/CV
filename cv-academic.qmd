@@ -1,0 +1,190 @@
+---
+format:
+  pdf:
+    documentclass: article
+    geometry:
+      - margin=1in
+    keep-tex: false
+editor: source
+header-includes:
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{xcolor}
+  - \usepackage{titlesec}
+  - \usepackage{booktabs}
+  - \definecolor{lightgray}{gray}{0.5}
+  - \titleformat{\section}{\Large\bfseries}{}{0em}{}[\titlerule]
+---
+
+\pagenumbering{gobble}
+
+```{=latex}
+\noindent
+\begin{minipage}[t]{0.65\textwidth}
+  \Huge \textbf{Michael Asger Andersen}
+\end{minipage}%
+\begin{minipage}[t]{0.35\textwidth}
+  \raggedleft
+  \small
+  \textbf{Mobile:} +45 31770856 \\
+  \textbf{Email:} michaelasger@gmail.com \\
+  \textbf{ORCID:} 0000-0001-9729-9974 \\
+  \textbf{Website:} https://masger.github.io
+\end{minipage}
+```
+
+\vspace{0.5cm}
+\hrule
+\vspace{0.5cm}
+
+\section*{Research interests}
+My research examines how pharmacogenetic testing can be translated into better clinical outcomes by linking insights from large-scale registry data with prospective clinical interventions. I focus on cardiovascular pharmacogenetics, including implementation of CYP2C19-guided antiplatelet therapy and investigation of SLCO1B1-mediated statin intolerance.
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
+library(tidyverse)
+library(knitr)
+library(glue)
+library(data.table)
+library(readxl)
+
+# Read data
+cv_entries <- read_csv("cv_data_maa_updated.csv", col_types = cols(.default = "c")) |> setDT()
+
+# Process dates
+# Fix: Handle ISO date strings from CSV instead of Excel numeric dates
+cv_entries[, real_date := as.Date(date)]
+cv_entries[, real_date_end := suppressWarnings(as.Date(date_end))]
+
+cv_entries[
+  , year_end := fifelse(date_end == "present", "present", as.character(year(real_date_end)))]
+
+cv_entries[,
+         year := fifelse(!is.na(year_end), paste0(year(real_date), "--", year_end), as.character(year(real_date)))]
+
+cv_entries = cv_entries[order(type,-real_date)]
+
+# Helper to print table rows
+print_section <- function(data) {
+  cat("\\begin{longtable}{@{}p{0.15\\textwidth} p{0.82\\textwidth}@{}}\n")
+
+  for(i in 1:nrow(data)) {
+    # Escape special characters
+    what_text <- str_replace_all(data$what[i], "~", "$\\\\approx$")
+    what_text <- str_replace_all(what_text, "&", "\\\\&")
+    what_text <- str_replace_all(what_text, "%", "\\\\%")
+
+    # Year in gray
+    cat(glue("\\textcolor{{lightgray}}{{{data$year[i]}}} & {what_text} \\\\"), "\n")
+    cat("\\addlinespace[0.2cm]\n")
+  }
+
+  cat("\\end{longtable}\n")
+}
+```
+
+\section*{Education}
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
+edu <- cv_entries |>
+  filter(type == 'education') |>
+  mutate(what = fifelse(what == "PhD",glue("\\textbf{{{what}}}, {where} \\newline ",
+                      "{additional_info} \\newline ",
+                      "\\textit{{{additional_info2}}}"),
+                      glue("\\textbf{{{what}}}, {where}"))) |>
+  select(year, what)
+
+print_section(edu)
+```
+
+\section*{Professional experience}
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
+pos <- cv_entries |>
+  filter(type == 'positions', is.na(exclude)) |>
+  mutate(what = case_when(
+    !is.na(additional_info) & !is.na(where) ~ glue("\\textbf{{{what}}} {where} \\newline {additional_info}"),
+    !is.na(additional_info) & is.na(where) ~ glue("\\textbf{{{what}}} \\newline {additional_info}"),
+    is.na(additional_info) & !is.na(where) ~ glue("\\textbf{{{what}}} {where}"),
+    TRUE ~ glue("\\textbf{{{what}}}")
+  )) |>
+  select(year, what)
+
+print_section(pos)
+```
+
+\section*{Major grants and funding (Principal Investigator: $\approx$DKK 5.6 million)}
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
+grants <- cv_entries |>
+  filter(type == 'major_grants') |>
+  mutate(what = if_else(is.na(additional_info),
+                        glue("\\textbf{{{what}}} ({additional_info2}), {where}"),
+                        glue("\\textbf{{{what}}} ({additional_info2}), {where}. \\newline {additional_info}"))) |>
+  select(year, what)
+
+print_section(grants)
+```
+
+\section*{Awards \& honours}
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
+awards <- cv_entries |>
+  filter(type == 'awards') |>
+  mutate(what = if_else(!is.na(where),
+                        glue("\\textbf{{{what}}}, {where}"),
+                        glue("\\textbf{{{what}}}"))) |>
+  select(year, what)
+
+print_section(awards)
+```
+
+\section*{Teaching experience}
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
+teaching <- cv_entries |>
+  filter(type == 'teaching') |>
+  mutate(what = case_when(
+    !is.na(institution) & !is.na(where) ~ glue("\\textbf{{{what}}}, {institution}, {where} \\newline {additional_info}"),
+    !is.na(institution) & is.na(where) ~ glue("\\textbf{{{what}}}, {institution} \\newline {additional_info}"),
+    is.na(institution) & !is.na(where) ~ glue("\\textbf{{{what}}}, {where} \\newline {additional_info}"),
+    TRUE ~ glue("\\textbf{{{what}}} \\newline {additional_info}")
+  )) |>
+  select(year, what)
+
+print_section(teaching)
+```
+
+\section*{Supervision}
+
+\begin{itemize}
+    \item \textbf{Primary Supervisor for PhD student}: Present (1); Graduated (0), if the current grant is awarded I will be primary supervisor for two PhD students.
+    \item \textbf{Co-Supervisor for PhD students}: Present (0); Graduated (1):
+    \item \textbf{Primary Supervisor for master and bachelor students}: Present (1); Graduated (4)
+\end{itemize}
+
+\section*{Academic Commissions}
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
+comm <- cv_entries |>
+  filter(type == 'academic_commisions') |>
+  mutate(what = glue("\\textbf{{{what}}}, {where}")) |>
+  select(year, what)
+
+print_section(comm)
+```
+
+\section*{Clinical Guidelines}
+
+\begin{itemize}
+    \item \textbf{CPIC NAT2 guideline}: Participant in the working group
+    \item \textbf{Medical Genetics Summaries}: Simvastatin Therapy and SLCO1B1 Genotype : Reviewer
+\end{itemize}
+
+\section*{Publications}
+
+\begin{itemize}
+    \item \textbf{Total Peer-review publications}: 41
+    \item \textbf{First and last author publications}: 7 (1 as shared last author)
+    \item \textbf{H-index}: 17 (Google scholar, December 2025)
+    \item \textbf{Citations}: 887 (Google scholar, December 2025)
+\end{itemize}

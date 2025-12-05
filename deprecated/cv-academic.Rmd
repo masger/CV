@@ -1,0 +1,170 @@
+---
+output:
+  pagedown::html_paged:
+    number_sections: false
+    css: ["css/academic_cv.css"]
+links-to-footnotes: false
+knit: pagedown::chrome_print
+editor_options:
+  chunk_output_type: console
+spacing: single
+---
+
+<style>
+:root{
+  --last-updated: "\00a0 \00a0 \00a0 \00a0 Last updated: `r format(Sys.Date(), '%B, %Y')`";
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(knitr)
+library(glue)
+library(fontawesome)
+library(readxl)
+library(lubridate)
+library(data.table)
+source("R/utility-functions.R")
+
+cv_entries <- read_csv("cv_data_maa_updated.csv") |> setDT()
+cv_entries[
+  , c("real_date", "real_date_end") := .(
+    as.Date(date),
+    as.Date(as.numeric(date_end), origin = "1900-01-01")
+  )
+]
+cv_entries[
+  , year_end := fifelse(date_end == "present", "present", as.character(year(real_date_end)))
+]
+
+cv_entries[
+  ,
+  year := fifelse(!is.na(year_end), paste0(year(real_date), "---", year_end), as.character(year(real_date)))
+]
+
+cv_entries <- cv_entries[order(type, -real_date)]
+
+publications <- read_excel("cv_data.xlsx", sheet = "publications") |>
+  mutate(year = year(date))
+```
+
+::: {.title-and-contact}
+
+:::::: {.title}
+<h1 class="title">Michael Asger Andersen</h1>
+::::::
+
+:::::: {.contact-info}
+**Born:** November 13, 1987 in Roskilde<br>
+**Mobile:** +45 31770856<br>
+**Email:** michaelasger@gmail.com<br>
+**ORCID:** 0000-0001-9729-9974<br>
+**Website:** https://masger.github.io<br>
+::::::
+
+:::
+
+::: {.cv-entries}
+
+### Research interests
+My research examines how pharmacogenetic testing can be translated into better clinical outcomes by linking insights from large-scale registry data with prospective clinical interventions. I focus on cardiovascular pharmacogenetics, including implementation of CYP2C19-guided antiplatelet therapy and investigation of SLCO1B1-mediated statin intolerance.
+
+### Education
+```{r}
+cv_entries |>
+  filter(type == "education") |>
+  mutate(what = fifelse(
+    what == "PhD", glue(
+      "<span class='cv-entry-title'>{what}</span>, {where}<br>",
+      "{additional_info}<br>",
+      "<span class='thesis-title'>{additional_info2}</span>"
+    ),
+    glue("<span class='cv-entry-title'>{what}</span>, {where}")
+  )) |>
+  select(year, what) |>
+  kable()
+```
+
+### Professional experience
+```{r}
+cv_entries |>
+  filter(type == "positions", is.na(exclude)) |>
+  mutate(what = case_when(
+    !is.na(additional_info) & !is.na(where) ~ glue("<span class='cv-entry-title'>{what}</span>", " {where}<br>{additional_info}"),
+    !is.na(additional_info) & is.na(where) ~ glue("<span class='cv-entry-title'>{what}</span><br>{additional_info}"),
+    is.na(additional_info) & !is.na(where) ~ glue("<span class='cv-entry-title'>{what}</span>", " {where}"),
+    TRUE ~ glue("<span class='cv-entry-title'>{what}</span>")
+  )) |>
+  select(year, what) |>
+  kable()
+```
+
+
+### Major grants and funding
+```{r}
+cv_entries |>
+  filter(type == "major_grants") |>
+  mutate(what = if_else(is.na(additional_info),
+    glue("<span class='cv-entry-title'>{what}</span> ({additional_info2}), {where}"),
+    glue("<span class='cv-entry-title'>{what}</span> ({additional_info2}), {where}.<br>{additional_info}")
+  )) |>
+  select(year, what) |>
+  manual_page_break_after_row("what", "Maureen Freed") |>
+  kable()
+```
+
+### Awards & honours
+```{r}
+cv_entries |>
+  filter(type == "awards") |>
+  mutate(what = if_else(!is.na(where),
+    glue("<span class='cv-entry-title'>{what}</span>, {where}"),
+    glue("<span class='cv-entry-title'>{what}</span>")
+  )) |>
+  blank_year_when_repeated() |>
+  select(year, what) |>
+  kable()
+```
+
+### Teaching experience
+```{r}
+cv_entries |>
+  filter(type == "teaching") |>
+  mutate(what = glue(
+    "<span class='cv-entry-title'>{what}</span>,{institution}, {where}<br>",
+    "{additional_info}"
+  )) |>
+  select(year, what) |>
+  manual_page_break_after_row("what", "Lecturer") |>
+  kable()
+```
+
+### Supervision
+- Primary Supervisor for PhD student: Present (1); Graduated (0), if the current grant is awarded I will be primary supervisor for two PhD students.
+- Co-Supervisor for PhD students: Present (0); Graduated (1):
+- Primary Supervisor for master and bachelor students: Present (1); Graduated (4)
+
+### Academic Commissions
+```{r}
+cv_entries |>
+  filter(type == "academic_commisions") |>
+  mutate(what = glue("<span class='cv-entry-title'>{what}</span>, {where}")) |>
+  blank_year_when_repeated() |>
+  select(year, what) |>
+  kable()
+```
+
+### Clinical Guidelines
+- CPIC NAT2 guideline: Participant in the working group
+- Medical Genetics Summaries: Simvastatin Therapy and SLCO1B1 Genotype : Reviewer
+
+### Publications
+- Total Peer-review publications: 41
+- First and last author publications: 7 (1 as shared last author)
+- H-index: 17 (Google scholar, December 2025)
+- Citations 887 (Google scholar, December 2025)
+
+<!-- <br class="pageBreak"> -->
+
+:::
