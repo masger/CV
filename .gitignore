@@ -1,6 +1,6 @@
 # Claude Code
 .claude/
-.deprecated/
+deprecated/
 
 /.quarto/
 *.Rproj.user
