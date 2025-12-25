@@ -59,7 +59,9 @@ cv_entries[
   , year_end := fifelse(date_end == "present", "present", as.character(year(real_date_end)))]
 
 cv_entries[,
-         year := fifelse(!is.na(year_end), paste0(year(real_date), "--", year_end), as.character(year(real_date)))]
+         year := fifelse(!is.na(year_end) & year(real_date) != year_end,
+                        paste0(year(real_date), "--", year_end),
+                        as.character(year(real_date)))]
 
 cv_entries = cv_entries[order(type,-real_date)]
 
@@ -157,7 +159,7 @@ print_section(teaching)
 \section*{Supervision}
 
 \begin{itemize}
-    \item \textbf{Primary Supervisor for PhD student}: Present (1); Graduated (0), if the current grant is awarded I will be primary supervisor for two PhD students.
+    \item \textbf{Primary Supervisor for PhD student}: Present (1); Graduated (0)
     \item \textbf{Co-Supervisor for PhD students}: Present (0); Graduated (1):
     \item \textbf{Primary Supervisor for master and bachelor students}: Present (1); Graduated (4)
 \end{itemize}
