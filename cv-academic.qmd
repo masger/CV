@@ -37,9 +37,6 @@ header-includes:
 \hrule
 \vspace{0.5cm}
 
-\section*{Research interests}
-My research examines how pharmacogenetic testing can be translated into better clinical outcomes by linking insights from large-scale registry data with prospective clinical interventions. I focus on cardiovascular pharmacogenetics, including implementation of CYP2C19-guided antiplatelet therapy and investigation of SLCO1B1-mediated statin intolerance.
-
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 library(tidyverse)
 library(knitr)
@@ -98,7 +95,7 @@ edu <- cv_entries |>
 print_section(edu)
 ```
 
-\section*{Professional experience}
+\section*{Positions}
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 pos <- cv_entries |>
@@ -114,20 +111,33 @@ pos <- cv_entries |>
 print_section(pos)
 ```
 
-\section*{Major grants and funding (Principal Investigator: $\approx$DKK 5.6 million)}
+\section*{Research interests}
+I investigate how pharmacogenetic testing translates into improved clinical outcomes by linking large-scale registry data with prospective clinical interventions. My research focuses on cardiovascular pharmacogenetics, CYP2C19-guided antiplatelet therapy, and therapeutic drug monitoring. Central projects include the SAMSON-2 trial, a multicenter randomized N-of-1 trial investigating statin intolerance, and the TDM-VISION project, which evaluates therapeutic drug monitoring for targeted agents such as ibrutinib and venetoclax in patients with chronic lymphocytic leukemia. My work employs methods ranging from register-based epidemiology and Mendelian randomization to randomized clinical trial design.
+
+\section*{Major grants}
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 grants <- cv_entries |>
   filter(type == 'major_grants') |>
-  mutate(what = if_else(is.na(additional_info),
-                        glue("\\textbf{{{what}}} ({additional_info2}), {where}"),
-                        glue("\\textbf{{{what}}} ({additional_info2}), {where}. \\newline {additional_info}"))) |>
-  select(year, what)
+  mutate(
+    desc = case_when(
+      !is.na(additional_info2) ~ glue("\\textbf{{{what}}}, {additional_info2}"),
+      TRUE ~ glue("\\textbf{{{what}}}")
+    ),
+    amount = additional_info
+  )
 
-print_section(grants)
+cat("\\begin{longtable}{@{}p{0.12\\textwidth} p{0.63\\textwidth} >{\\raggedleft\\arraybackslash}p{0.22\\textwidth}@{}}\n")
+for(i in 1:nrow(grants)) {
+  desc_text <- str_replace_all(grants$desc[i], "&", "\\\\&")
+  desc_text <- str_replace_all(desc_text, "%", "\\\\%")
+  cat(glue("\\textcolor{{lightgray}}{{{grants$year[i]}}} & {desc_text} & {grants$amount[i]} \\\\"), "\n")
+  cat("\\addlinespace[0.2cm]\n")
+}
+cat("\\end{longtable}\n")
 ```
 
-\section*{Awards \& honours}
+\section*{Awards \& honors}
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 awards <- cv_entries |>
@@ -140,7 +150,7 @@ awards <- cv_entries |>
 print_section(awards)
 ```
 
-\section*{Teaching experience}
+\section*{Teaching}
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 teaching <- cv_entries |>
@@ -159,12 +169,12 @@ print_section(teaching)
 \section*{Supervision}
 
 \begin{itemize}
-    \item \textbf{Primary Supervisor for PhD student}: Present (1); Graduated (0)
-    \item \textbf{Co-Supervisor for PhD students}: Present (0); Graduated (1):
-    \item \textbf{Primary Supervisor for master and bachelor students}: Present (1); Graduated (4)
+    \item \textbf{Primary PhD supervisor}: ongoing (1), completed (0)
+    \item \textbf{Co-supervisor for PhD students}: ongoing (0), completed (1)
+    \item \textbf{Primary supervisor for master's and bachelor's students}: ongoing (0), completed (5)
 \end{itemize}
 
-\section*{Academic Commissions}
+\section*{Academic commissions}
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, results='asis'}
 comm <- cv_entries |>
@@ -175,18 +185,23 @@ comm <- cv_entries |>
 print_section(comm)
 ```
 
+\section*{Reviewer}
+
+\textit{Journals:} Recurrent reviewer for European Heart Journal, Basic \& Clinical Pharmacology \& Toxicology, Leukemia, Clinical Pharmacology \& Therapeutics, Communications Medicine, and Ugeskrift for Læger.
+
 \section*{Clinical Guidelines}
 
 \begin{itemize}
     \item \textbf{CPIC NAT2 guideline}: Participant in the working group
-    \item \textbf{Medical Genetics Summaries}: Simvastatin Therapy and SLCO1B1 Genotype : Reviewer
+    \item \textbf{Medical Genetics Summaries}: Simvastatin Therapy and SLCO1B1 Genotype: Reviewer
 \end{itemize}
 
 \section*{Publications}
 
 \begin{itemize}
-    \item \textbf{Total Peer-review publications}: 41
-    \item \textbf{First and last author publications}: 7 (1 as shared last author)
-    \item \textbf{H-index}: 17 (Google scholar, December 2025)
-    \item \textbf{Citations}: 887 (Google scholar, December 2025)
+    \item \textbf{Total Peer-review publications}: 48
+    \item \textbf{First and last author publications}: 18 (13 as first author, 5 as last author)
+    \item \textbf{Textbook chapters}: Co-author of the pharmacogenetics chapter in the core clinical pharmacology textbook (University of Copenhagen)
+    \item \textbf{H-index}: 18 (Google Scholar, April 2026)
+    \item \textbf{Citations}: 988 (Google Scholar, April 2026)
 \end{itemize}
